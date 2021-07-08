@@ -9,6 +9,7 @@ import java.security.NoSuchAlgorithmException;
 public class NonceFinder {
 
     public byte[] findNonce(byte[] target) {
+        System.out.println("[" + Thread.currentThread().getName() + "] computing nonce for " + new String(target));
         MessageDigest digest = getSha256Digest();
         byte[] nonce = new byte[10];
         byte[] hash = digest.digest(nonce);
