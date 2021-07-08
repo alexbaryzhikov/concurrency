@@ -7,26 +7,28 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class Main {
-    private static final String[] targets = {"aaa", "bbb", "ccc", "foo", "bar", "baz", "qux", "mop", "abc", "tip"};
+    private static final String[] targets = {
+            "aaa", "bbb", "ccc", "foo", "bar", "baz", "qux", "mop", "abc", "tip",
+            "dfa", "res", "vbf", "rew", "jju", "vdx", "xxx", "hjt", "ddw", "mmj",
+    };
 
     NonceFinder nonceFinder = new NonceFinder();
     Computable<String, byte[]> nonceComputable = s -> nonceFinder.findNonce(s.getBytes(StandardCharsets.UTF_8));
     Computable<String, byte[]> cachingNonceComputable = new CachingComputableWrapper<>(nonceComputable);
 
-    private void runComputations() throws InterruptedException {
-        int nCores = Runtime.getRuntime().availableProcessors();
+    private void runComputations(int nThreads) throws InterruptedException {
         CountDownLatch startLatch = new CountDownLatch(1);
-        CountDownLatch finishLatch = new CountDownLatch(nCores);
-
-        for (int i = 0; i < nCores; i++) {
+        CountDownLatch finishLatch = new CountDownLatch(nThreads);
+        for (int i = 0; i < nThreads; i++) {
             new Thread(() -> {
                 try {
                     computeNonces(startLatch, finishLatch);
                 } catch (InterruptedException ignored) {
+                } catch (Throwable e) {
+                    System.err.println("[" + Thread.currentThread().getName() + "] " + e);
                 }
             }).start();
         }
-
         long t0 = System.currentTimeMillis();
         startLatch.countDown();
         finishLatch.await();
@@ -46,7 +48,7 @@ public class Main {
 
     public static void main(String[] args) {
         try {
-            new Main().runComputations();
+            new Main().runComputations(Runtime.getRuntime().availableProcessors());
         } catch (InterruptedException ignored) {
         }
     }
